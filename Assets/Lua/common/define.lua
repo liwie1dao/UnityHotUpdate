@@ -1,0 +1,1 @@
+resMgr = ioo.resourceManager;
