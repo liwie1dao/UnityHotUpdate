@@ -79,3 +79,12 @@ lua/pbc/test2.lua
 lua/pbc/testparser.lua
 lua/pblua/login.proto
 lua/pblua/login_pb.lua
+lua/sqlite/aggregate.lua
+lua/sqlite/function.lua
+lua/sqlite/hooks_advanced.lua
+lua/sqlite/order.lua
+lua/sqlite/simple.lua
+lua/sqlite/smart.lua
+lua/sqlite/statement.lua
+lua/sqlite/tracing.lua
+lua/sqlite/update_hook.lua

@@ -1,8 +1,12 @@
 require "pblua/login_pb"
 require "pbc/protobuf"
 
+local lpeg = require "lpeg"
+
 local json = require "cjson"
 local util = require "cjson.util"
+
+local sqlite3 = require "sqlite3"
 
 require "logic/luaclass"
 require "common/define"
@@ -40,11 +44,59 @@ function GameManager.OnInitOK()
     this.test_pblua_func();
     this.test_cjson_func();
     this.test_pbc_func();
+    this.test_lpeg_func();
+    this.test_sqlite_file();
+    this.test_sqlite_memory();
+end
+
+function GameManager.test_lpeg_func()
+    warn("test_lpeg_func-------->>");
+    -- matches a word followed by end-of-string
+    local p = lpeg.R"az"^1 * -1
+
+    print(p:match("hello"))        --> 6
+    print(lpeg.match(p, "hello"))  --> 6
+    print(p:match("1 hello"))      --> nil
 end
 
 --测试lua类--
 function GameManager.test_class_func()
     luaclass:New(10, 20):test();
+end
+
+--测试sqlite file模式--
+function GameManager.test_sqlite_file()
+    local file = Util.DataPath.."Lua/sqlite/test.db";
+    warn('test_sqlite_file------->>>'..file);
+    local db = sqlite3.open(file);
+    db:exec[[
+        DROP TABLE IF EXISTS test;
+        CREATE TABLE test (id INTEGER PRIMARY KEY, content);
+
+        INSERT INTO test VALUES (NULL, 'Hello World');
+        INSERT INTO test VALUES (NULL, 'Hello Lua');
+        INSERT INTO test VALUES (NULL, 'Hello Sqlite3')
+    ]]
+    for row in db:nrows("SELECT * FROM test") do
+      print(row.id, row.content)
+    end 
+    if db ~= nil then db:close(); end
+end
+
+--测试sqlite memory模式--
+function GameManager.test_sqlite_memory()
+    warn('test_sqlite_memory------->>>');
+    local db = sqlite3.open_memory()
+    db:exec[[
+        CREATE TABLE test (id INTEGER PRIMARY KEY, content);
+
+        INSERT INTO test VALUES (NULL, 'Hello World');
+        INSERT INTO test VALUES (NULL, 'Hello Lua');
+        INSERT INTO test VALUES (NULL, 'Hello Sqlite3')
+    ]]
+    for row in db:nrows("SELECT * FROM test") do
+      print(row.id, row.content)
+    end
 end
 
 --测试pblua--

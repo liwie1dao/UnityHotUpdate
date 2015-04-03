@@ -11,7 +11,7 @@ function MessagePanel.Start()
 	warn("Start lua--->>"..gameObject.name);
 
 	local panel = gameObject:GetComponent('UIPanel');
-	-- panel.depth = 10;	--设置纵深--
+	panel.depth = 10;	--设置纵深--
 
 	local Button = find('Button');
 	UIEventListener.Get(Button).onClick = LuaHelper.VoidDelegate(this.OnClick);
