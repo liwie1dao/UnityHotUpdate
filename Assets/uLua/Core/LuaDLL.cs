@@ -95,8 +95,6 @@ namespace LuaInterface
         [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern int luaopen_lsqlite3(IntPtr L);
 
-        [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int luaopen_pack(IntPtr L);
 
 #if UNITY_EDITOR
         [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
@@ -405,8 +403,6 @@ namespace LuaInterface
         [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern void lua_pushcclosure(IntPtr luaState, IntPtr fn, int n);
 
-        [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr lua_tocbuffer(byte[] bytes, int n);
 
         [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern int luaL_typerror(IntPtr luaState, int narg, string tname);

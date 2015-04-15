@@ -230,7 +230,7 @@ public class LuaScriptMgr
         //CmdTable.RegisterCommand("ToLua", ToLua.Generate);
         //CmdTable.RegisterCommand("LuaGC", LuaGC);
         //CmdTable.RegisterCommand("memory", LuaMem);
-        //CmdTable.RegisterCommand("GM", SendGMmsg);        
+        //CmdTable.RegisterCommand("GM", SendGMmsg);                
     }
 
     void SendGMmsg(params string[] param)
@@ -350,6 +350,7 @@ public class LuaScriptMgr
 #endif        
 
         DoFile("Main.lua");
+
         CallLuaFunction("Main");
         updateFunc = GetLuaFunction("Update");
         lateUpdateFunc = GetLuaFunction("LateUpdate");
@@ -959,8 +960,8 @@ public class LuaScriptMgr
             return null;
         }
 
-        LuaDLL.lua_pushvalue(L, stackPos);
-        return new LuaFunction(LuaDLL.luaL_ref(L, LuaIndexes.LUA_REGISTRYINDEX), L);
+        LuaDLL.lua_pushvalue(L, stackPos);        
+        return new LuaFunction(LuaDLL.luaL_ref(L, LuaIndexes.LUA_REGISTRYINDEX), GetTranslator(L).interpreter);   
     }
 
     public static LuaFunction GetLuaFunction(IntPtr L, int stackPos)
@@ -1036,8 +1037,7 @@ public class LuaScriptMgr
     public static T GetUnityObject<T>(IntPtr L, int stackPos)
     {
         object obj = GetLuaObject(L, stackPos);
-        Type type = typeof(T);
-        Type objType = obj.GetType();
+        Type type = typeof(T);        
 
         if (obj == null)
         {
@@ -1053,6 +1053,8 @@ public class LuaScriptMgr
             }
         }
 
+        Type objType = obj.GetType();
+
         if (type != objType && !objType.IsSubclassOf(type))
         {
             LuaDLL.luaL_argerror(L, stackPos, string.Format("{0} expected, got {1}", type.Name, objType.Name));
@@ -1064,8 +1066,7 @@ public class LuaScriptMgr
     public static T GetTrackedObject<T>(IntPtr L, int stackPos)
     {
         object obj = GetLuaObject(L, stackPos);
-        Type type = typeof(T);
-        Type objType = obj.GetType();
+        Type type = typeof(T);        
 
         if (obj == null)
         {
@@ -1080,6 +1081,8 @@ public class LuaScriptMgr
                 LuaDLL.luaL_argerror(L, stackPos, string.Format("{0} expected, got nil", type.Name));
             }
         }
+
+        Type objType = obj.GetType();
 
         if (type != objType && !objType.IsSubclassOf(type))
         {
@@ -2037,16 +2040,16 @@ public class LuaScriptMgr
         }        
     }
 
-    [MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
-    public static int Xml_read (IntPtr L) 
-    {
-        string xml = GetLuaString(L, 1);
-        Debuger.Log("read {0}", xml);
-        TextAsset ta = Resources.Load(xml, typeof(TextAsset)) as TextAsset;
-        IntPtr buffer = LuaDLL.lua_tocbuffer(ta.bytes, ta.bytes.Length);        
-        LuaDLL.lua_pushlightuserdata(L, buffer);
-        return 1;
-    }
+    //[MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
+    //public static int Xml_read (IntPtr L) 
+    //{
+    //    string xml = GetLuaString(L, 1);
+    //    Debugger.Log("read {0}", xml);
+    //    TextAsset ta = Resources.Load(xml, typeof(TextAsset)) as TextAsset;
+    //    IntPtr buffer = LuaDLL.lua_tocbuffer(ta.bytes, ta.bytes.Length);        
+    //    LuaDLL.lua_pushlightuserdata(L, buffer);
+    //    return 1;
+    //}
 
     [MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
     public static int IndexArray(IntPtr L)
@@ -2478,7 +2481,7 @@ public class LuaScriptMgr
     public static void PushTraceBack(IntPtr L)
     {
 #if !MULTI_STATE
-        traceback.push(L);
+        traceback.push();
 #else
         LuaDLL.lua_getglobal(L, "traceback");
 #endif
