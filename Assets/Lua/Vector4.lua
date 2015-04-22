@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
---      Copyright (c) 2015 , ��ռ־(topameng) topameng@gmail.com
+--      Copyright (c) 2015 , 蒙占志(topameng) topameng@gmail.com
 --      All rights reserved.
 --
 --      Use, modification and distribution are subject to the "New BSD License"
@@ -42,8 +42,8 @@ end
 
 function Vector4.New(x, y, z, w)
 	local v = {}
-	setmetatable(v, Vector2)
-	v:Set(x,y)
+	setmetatable(v, Vector4)
+	v:Set(x,y,z,w)
 	return v
 end
 

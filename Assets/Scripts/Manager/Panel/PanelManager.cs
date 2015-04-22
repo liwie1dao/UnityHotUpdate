@@ -13,6 +13,7 @@ public class KeyValue {
 
 public class PanelManager : MonoBehaviour {
     private Transform parent;
+    const string kAssetBundlesPath = "/Assets/AssetBundles/";
     private static Queue<KeyValue> events = new Queue<KeyValue>();
 
     Transform Parent {
@@ -29,10 +30,24 @@ public class PanelManager : MonoBehaviour {
     /// </summary>
     /// <param name="type"></param>
     public void CreatePanel(string name) {
+        StartCoroutine(OnCreatePanel(name));
+    }
+
+    IEnumerator OnCreatePanel(string name) {
+        yield return StartCoroutine(Initialize());
+
         string assetName = name + "Panel";
-        GameObject prefab = ioo.resourceManager.LoadAsset(name, assetName);
+        // Load asset from assetBundle.
+        string abName = name.ToLower() + ".unity3d";
+        AssetBundleAssetOperation request = ResourceManager.LoadAssetAsync(abName, assetName, typeof(GameObject));
+        if (request == null) yield break;
+        yield return StartCoroutine(request);
+
+        // Get the asset.
+        GameObject prefab = request.GetAsset<GameObject>();
+
         if (Parent.FindChild(name) != null || prefab == null) {
-            return;
+            yield break;
         }
         GameObject go = Instantiate(prefab) as GameObject;
         go.name = assetName;
@@ -40,8 +55,28 @@ public class PanelManager : MonoBehaviour {
         go.transform.SetParent(Parent);
         go.transform.localScale = Vector3.one;
         go.transform.localPosition = Vector3.zero;
-        go.AddComponent<BaseLua>(); 
+        go.AddComponent<BaseLua>();
 
         Debug.LogWarning("CreatePanel::>> " + name + " " + prefab);
+    }
+
+    IEnumerator Initialize() {
+        ResourceManager.BaseDownloadingURL = GetRelativePath() + kAssetBundlesPath;
+
+        // Initialize AssetBundleManifest which loads the AssetBundleManifest object.
+        var request = ResourceManager.Initialize("AssetBundles");
+        if (request != null)
+            yield return StartCoroutine(request);
+    }
+
+    public string GetRelativePath() {
+        if (Application.isEditor)
+            return "file://" + System.Environment.CurrentDirectory.Replace("\\", "/"); // Use the build output folder directly.
+        else if (Application.isWebPlayer)
+            return System.IO.Path.GetDirectoryName(Application.absoluteURL).Replace("\\", "/") + "/StreamingAssets";
+        else if (Application.isMobilePlatform || Application.isConsolePlatform)
+            return Application.streamingAssetsPath;
+        else // For standalone player.
+            return "file://" + Application.streamingAssetsPath;
     }
 }

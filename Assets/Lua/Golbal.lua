@@ -49,15 +49,12 @@ function print(...)
 	for i = 1, n do
 		str = string.format("%s%s", str, tostring(arg[i]))
 	end
-	log(str)
+	
+	Debugger.Log(str)
 end
 
 function printf(format, ...)
-	local str = ""	
-	for i = 1, n do
-		str = string.format(format, str, tostring(arg[i]))
-	end
-	log(str)
+	Debugger.Log(string.format(format, ...))
 end
 
 

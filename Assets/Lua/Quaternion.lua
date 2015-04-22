@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
---      Copyright (c) 2015 , ÃÉÕ¼Ö¾(topameng) topameng@gmail.com
+--      Copyright (c) 2015 , è’™å å¿—(topameng) topameng@gmail.com
 --      All rights reserved.
 --
 --      Use, modification and distribution are subject to the "New BSD License"
@@ -155,14 +155,14 @@ function Quaternion:SetNormalize()
 	end
 end
 
---²úÉúÒ»¸öĞÂµÄ´Ófromµ½toµÄËÄÔªÊı
+--äº§ç”Ÿä¸€ä¸ªæ–°çš„ä»fromåˆ°toçš„å››å…ƒæ•°
 function Quaternion.FromToRotation(from, to)
 	local quat = Quaternion.New()
 	quat:SetFromToRotation(from, to)
 	return quat
 end
 
---ÉèÖÃµ±Ç°ËÄÔªÊıÎª from µ½ toµÄĞı×ª, ×¢ÒâfromºÍtoÍ¬ forwardÆ½ĞĞ»áÍ¬unity²»Ò»ÖÂ
+--è®¾ç½®å½“å‰å››å…ƒæ•°ä¸º from åˆ° toçš„æ—‹è½¬, æ³¨æ„fromå’ŒtoåŒ forwardå¹³è¡Œä¼šåŒunityä¸ä¸€è‡´
 function Quaternion:SetFromToRotation(from, to)
 	local v0 = from:Normalize()
 	local v1 = to:Normalize()
@@ -226,19 +226,19 @@ function Quaternion.LookRotation(forward, up)
 end
 
 function Quaternion.Slerp(from, to, t)
+	t = clamp(t, 0, 1)	
 	local cosAngle = Quaternion.Dot(from, to)
-	t = clamp(t, 0, 1)
 	
     if cosAngle < 0 then    
         cosAngle = -cosAngle
         to = -to
     end
     
-    local angle 	= acos(cosAngle)
-    local sinAngle 	= sin(angle)
     local t1, t2
     
-    if sinAngle > 0.001 then    
+    if cosAngle < 0.9999 then    
+	    local angle 	= acos(cosAngle)
+		local sinAngle 	= sin(angle)
         local invSinAngle = 1 / sinAngle
         t1 = sin((1 - t) * angle) * invSinAngle
         t2 = sin(t * angle) * invSinAngle    
@@ -296,7 +296,7 @@ function Quaternion:ToAngleAxis()
 	local scale = sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 	local w = clamp(self.w / scale, -1, 1)
 	
-	--»³ÒÉu3dÕâÀïĞ´´íÁË w < -1 Ò²Ó¦¸ÃÔÚÕâÀï
+	--æ€€ç–‘u3dè¿™é‡Œå†™é”™äº† w < -1 ä¹Ÿåº”è¯¥åœ¨è¿™é‡Œ
 	if scale < 1e-6 and w > 1 then		
 		return 0, Vector3.New(1, 0, 0)		
 	end

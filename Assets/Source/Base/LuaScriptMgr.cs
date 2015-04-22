@@ -8,7 +8,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Diagnostics;
 using System.Collections;
-using Junfine.Debuger;
 
 public class LuaScriptMgr
 {
@@ -235,7 +234,7 @@ public class LuaScriptMgr
 
     void SendGMmsg(params string[] param)
     {
-        Debuger.Log("SendGMmsg");
+        Debugger.Log("SendGMmsg");
         string str = "";
         int i = 0;
         foreach (string p in param)
@@ -243,12 +242,25 @@ public class LuaScriptMgr
             if (i >0)
             {
                 str = str +" "+ p;
-                Debuger.Log(p);
+                Debugger.Log(p);
             }
             i++;
         }
         CallLuaFunction("GMMsg", str);
     }
+
+    //void OpenXml()
+    //{
+    //    IntPtr L = lua.L;
+    //    LuaDLL.luaopen_LuaXML(L);
+    //    LuaDLL.lua_getglobal(L, "xml");
+
+    //    LuaDLL.lua_pushstring(L, "read");
+    //    LuaDLL.lua_pushstdcallcfunction(L, Xml_read);
+    //    LuaDLL.lua_rawset(L, -3);
+
+    //    LuaDLL.lua_settop(L, 0);
+    //}
 
     void Bind()
     {
@@ -281,7 +293,7 @@ public class LuaScriptMgr
     {
         if (param.Length != 2)
         {
-            Debuger.Log("PrintLua [ModuleName]");
+            Debugger.Log("PrintLua [ModuleName]");
             return;
         }
         
@@ -454,7 +466,7 @@ public class LuaScriptMgr
         lua.Dispose();
         lua = null;
 
-        Debuger.Log("Lua module destroy");        
+        Debugger.Log("Lua module destroy");        
     }
 
     public object[] DoString(string str)
@@ -521,7 +533,7 @@ public class LuaScriptMgr
             }
             else
             {
-                Debuger.LogWarning("Lua function {0} not exists", name);
+                Debugger.LogWarning("Lua function {0} not exists", name);
             }
 
             LuaDLL.lua_settop(L, oldTop);            
@@ -605,7 +617,7 @@ public class LuaScriptMgr
         if (type != LuaTypes.LUA_TTABLE)
         {
             LuaDLL.lua_settop(L, oldTop);
-            Debuger.LogError("Push lua table {0} failed", path[0]);
+            Debugger.LogError("Push lua table {0} failed", path[0]);
             return false;
         }
 
@@ -618,7 +630,7 @@ public class LuaScriptMgr
             if (type != LuaTypes.LUA_TTABLE)
             {
                 LuaDLL.lua_settop(L, oldTop);
-                Debuger.LogError("Push lua table {0} failed", fullPath);
+                Debugger.LogError("Push lua table {0} failed", fullPath);
                 return false;
             }
         }
@@ -987,7 +999,7 @@ public class LuaScriptMgr
         }
 
         LuaDLL.lua_pushvalue(L, stackPos);
-        return new LuaTable(LuaDLL.luaL_ref(L, LuaIndexes.LUA_REGISTRYINDEX), L);
+        return new LuaTable(LuaDLL.luaL_ref(L, LuaIndexes.LUA_REGISTRYINDEX), GetTranslator(L).interpreter);
     }
 
     public static LuaTable GetLuaTable(IntPtr L, int stackPos)
@@ -1535,8 +1547,62 @@ public class LuaScriptMgr
         return true;
     }    
 
+    static bool CheckTableType(IntPtr L, Type t, int stackPos)
+    {
+        if (t.IsArray)
+        {
+            return true;
+        }
+        else if (t == typeof(LuaTable))
+        {
+            return true;
+        }
+        else if (t.IsValueType)
+        {
+            int oldTop = LuaDLL.lua_gettop(L);
+            LuaDLL.lua_pushvalue(L, stackPos);
+            LuaDLL.lua_pushstring(L, "class");
+            LuaDLL.lua_gettable(L, -2);
+
+            string cls = LuaDLL.lua_tostring(L, -1);
+            LuaDLL.lua_settop(L, oldTop);            
+
+            if (cls == "Vector3")
+            {
+                return t == typeof(Vector3);
+            }
+            else if (cls == "Vector2")
+            {
+                return t == typeof(Vector2);
+            }
+            else if (cls == "Quaternion")
+            {
+                return t == typeof(Quaternion);
+            }
+            else if (cls == "Color")
+            {
+                return t == typeof(Color);
+            }
+            else if (cls == "Vector4")
+            {
+                return t == typeof(Vector4);
+            }
+            else if (cls == "Ray")
+            {
+                return t == typeof(Ray);
+            }
+        }
+
+        return false;
+    }
+
     public static bool CheckType(IntPtr L, Type t, int pos)
     {
+        if (t == typeof(object))
+        {
+            return true;
+        }
+
         LuaTypes luaType = LuaDLL.lua_type(L, pos);
 
         switch (luaType)
@@ -1552,7 +1618,7 @@ public class LuaScriptMgr
             case LuaTypes.LUA_TFUNCTION:
                 return t == typeof(LuaFunction);
             case LuaTypes.LUA_TTABLE:
-                return t == typeof(LuaTable) || t.IsArray;
+                return CheckTableType(L, t, pos);
             case LuaTypes.LUA_TNIL:
                 return t == null;
             default:
@@ -1649,6 +1715,7 @@ public class LuaScriptMgr
             T val = default(T);
             List<T> list = new List<T>();
             LuaDLL.lua_pushvalue(L, stackPos);
+            Type t = typeof(T);
 
             do
             {                
@@ -1657,15 +1724,16 @@ public class LuaScriptMgr
 
                 if (luatype == LuaTypes.LUA_TNIL)
                 {
-                    return list.ToArray(); ;
+                    LuaDLL.lua_pop(L, 1);
+                    return list.ToArray();
                 }
-                else if (luatype != LuaTypes.LUA_TUSERDATA)
+                else if (!CheckType(L, t, -1))
                 {
                     LuaDLL.lua_pop(L, 1);
                     break;
-                }
+                }                
 
-                val = (T)translator.getRawNetObject(L, -1);
+                val = (T)GetVarObject(L, -1);
                 list.Add(val);
                 LuaDLL.lua_pop(L, 1);
                 ++index;
@@ -1961,15 +2029,17 @@ public class LuaScriptMgr
         {
             LuaDLL.lua_settop(L, oldTop);
             LuaDLL.lua_pushvalue(L, stackPos);
-            o = new LuaTable(LuaDLL.luaL_ref(L, LuaIndexes.LUA_REGISTRYINDEX), L);            
+            o = new LuaTable(LuaDLL.luaL_ref(L, LuaIndexes.LUA_REGISTRYINDEX), GetTranslator(L).interpreter);            
         }
         else
         {
             string cls = LuaDLL.lua_tostring(L, -1);
             LuaDLL.lua_settop(L, oldTop);
 
+            stackPos = stackPos > 0 ? stackPos : stackPos + oldTop;
+
             if (cls == "Vector3")
-            {
+            {                
                 o = GetVector3(L, stackPos);
             }
             else if (cls == "Vector2")
@@ -1995,7 +2065,7 @@ public class LuaScriptMgr
             else
             {
                 LuaDLL.lua_pushvalue(L, stackPos);
-                o = new LuaTable(LuaDLL.luaL_ref(L, LuaIndexes.LUA_REGISTRYINDEX), L);      
+                o = new LuaTable(LuaDLL.luaL_ref(L, LuaIndexes.LUA_REGISTRYINDEX), GetTranslator(L).interpreter);      
             }
         }
         
@@ -2154,16 +2224,16 @@ public class LuaScriptMgr
             switch(t)
             {
                 case LuaTypes.LUA_TSTRING:
-                    Debuger.Log(LuaDLL.lua_tostring(L, i));
+                    Debugger.Log(LuaDLL.lua_tostring(L, i));
                     break;
                 case LuaTypes.LUA_TBOOLEAN:
-                    Debuger.Log(LuaDLL.lua_toboolean(L, i).ToString());
+                    Debugger.Log(LuaDLL.lua_toboolean(L, i).ToString());
                     break;
                 case LuaTypes.LUA_TNUMBER:
-                    Debuger.Log(LuaDLL.lua_tonumber(L, i).ToString());
+                    Debugger.Log(LuaDLL.lua_tonumber(L, i).ToString());
                     break;                
                 default:
-                    Debuger.Log(LuaDLL.lua_tostring(L, i));
+                    Debugger.Log(LuaDLL.lua_tostring(L, i));
                     break;
             }
         }

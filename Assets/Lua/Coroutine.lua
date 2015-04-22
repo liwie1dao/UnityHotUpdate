@@ -7,23 +7,43 @@
 --------------------------------------------------------------------------------
 -- 扩展lua协同为c#协同形式
 
+local create = coroutine.create
+local running = coroutine.running
+local resume = coroutine.resume
+local yield = coroutine.yield
+local error = error
+
 function coroutine.start(f, ...)		
-	local co = coroutine.create(f)
-	local flag, msg = coroutine.resume(co, ...)
+	local co = create(f)
 	
-	if not flag then
-		error(msg)
+	if running() == nil then
+		local flag, msg = resume(co, ...)
+	
+		if not flag then		
+			error(msg)
+		end		
+	else
+		local args = {...}
+		
+		local action = function()							
+			local flag, msg = resume(co, unpack(args))
+	
+			if not flag then				
+				error(msg)		
+			end		
+		end
+			
+		local timer = FrameTimer.New(action, 0, 1)
+		timer:Start()
 	end
-	
-	return co
 end
 
 function coroutine.wait(t, ...)
 	local args = {...}
-	local co = coroutine.running()
+	local co = running()
 	
 	local action = function()		
-		local flag, msg = coroutine.resume(co, unpack(args))
+		local flag, msg = resume(co, unpack(args))
 		
 		if not flag then
 			error(msg)			
@@ -32,15 +52,15 @@ function coroutine.wait(t, ...)
 	
 	local timer = CoTimer.New(action, t, 1)
 	timer:Start()
-	coroutine.yield()
+	return yield()
 end
 
 function coroutine.step(t, ...)
 	local args = {...}
-	local co = coroutine.running()		
+	local co = running()		
 	
 	local action = function()							
-		local flag, msg = coroutine.resume(co, unpack(args))
+		local flag, msg = resume(co, unpack(args))
 	
 		if not flag then
 			error(msg)		
@@ -49,6 +69,6 @@ function coroutine.step(t, ...)
 			
 	local timer = FrameTimer.New(action, t or 1, 1)
 	timer:Start()
-	coroutine.yield()
+	return yield()
 end
 

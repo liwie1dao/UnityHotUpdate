@@ -6,7 +6,6 @@ namespace LuaInterface
 	using System.Reflection;
 	using System.Runtime.InteropServices;
 	using System.Collections.Generic;
-    using Junfine.Debuger;
 	//using System.Diagnostics;
 	
 	/*
@@ -626,7 +625,7 @@ namespace LuaInterface
 
                 if (LuaDLL.lua_isnil(luaState, -1))
                 {
-                    Debuger.LogWarning("Create not wrap ulua type:" + o.GetType().AssemblyQualifiedName);
+                    Debugger.LogWarning("Create not wrap ulua type:" + o.GetType().AssemblyQualifiedName);
                     LuaDLL.lua_settop(luaState, -2);
                     LuaDLL.luaL_newmetatable(luaState, o.GetType().AssemblyQualifiedName);
                     LuaDLL.lua_pushstring(luaState, "cache");
@@ -668,7 +667,7 @@ namespace LuaInterface
 
             if (LuaDLL.lua_isnil(luaState, -1))
             {
-                Debuger.LogWarning("Create not wrap ulua type:" + o.GetType().AssemblyQualifiedName);
+                Debugger.LogWarning("Create not wrap ulua type:" + o.GetType().AssemblyQualifiedName);
                 LuaDLL.lua_settop(luaState, -2);                
                 LuaDLL.luaL_newmetatable(luaState, o.GetType().AssemblyQualifiedName);
                 LuaDLL.lua_pushstring(luaState, "cache");

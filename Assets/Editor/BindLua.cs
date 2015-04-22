@@ -170,6 +170,7 @@ public static class LuaBinding
         ////_GT(typeof(Dictionary<int,string>)).SetWrapName("DictInt2Str").SetLibName("DictInt2Str"),
         
         //custom    
+        _GT(typeof(Debugger)),
         //_GT(typeof(SocketClient)),        
         //_GT(typeof(UIBase)),        
         //_GT(typeof(LuaHelper)),                           

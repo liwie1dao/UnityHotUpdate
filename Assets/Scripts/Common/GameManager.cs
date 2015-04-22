@@ -28,6 +28,7 @@ public class GameManager : BaseLua {
         Util.Add<TimerManager>(gameObject);
         Util.Add<SocketClient>(gameObject);
         Util.Add<NetworkManager>(gameObject);
+        Util.Add<ResourceManager>(gameObject);
 
         CheckExtractResource(); //释放资源
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
@@ -106,7 +107,7 @@ public class GameManager : BaseLua {
     /// </summary>
     IEnumerator OnUpdateResource() {
         if (!Const.UpdateMode) {
-            Util.Add<ResourceManager>(gameObject);
+            OnResourceInited();
             yield break;
         }
         WWW www = null;
@@ -171,7 +172,7 @@ public class GameManager : BaseLua {
         }
         yield return new WaitForEndOfFrame();
         message = "更新完成!!";
-        Util.Add<ResourceManager>(gameObject);
+        OnResourceInited();
     }
 
     void OnUpdateFailed(string file) {

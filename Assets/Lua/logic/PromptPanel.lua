@@ -14,16 +14,15 @@ function PromptPanel.Start()
 	trans = gameObject.transform;
 	prompt = gameObject:GetComponent('BaseLua');
 
-	this.InitPanel();	--初始化面板--
 	prompt:AddClick('Open');
+	resMgr:LoadAsset('prompt', 'PromptItem', this.InitPanel);
 	warn("Start lua--->>"..gameObject.name);
 end
 
 --初始化面板--
-function PromptPanel.InitPanel()
+function PromptPanel.InitPanel(prefab)
 	local count = 100; 
 	local parent = trans:Find('ScrollView/Grid');
-	local prefab = resMgr:LoadAsset('prompt', 'PromptItem');
 	for i = 1, count do
 		local go = newobject(prefab);
 		go.name = 'Item'..tostring(i);
